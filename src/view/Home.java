@@ -43,16 +43,20 @@ public class Home extends javax.swing.JFrame {
     private static ArrayList<String> dsUser = new ArrayList<>();
     private static ArrayList<Integer> dsE = new ArrayList<>();    
     private static ArrayList<Integer> dsN = new ArrayList<>();
-
+    
     byte[] hash;
     /**
      * Creates new form Home
      */
     public Home() {
         initComponents();
-//        for(int i = 0;  i < dsPublicKey.size(); i++){
-//                    cmbPublicKey.addItem();
-//        }
+        
+        if(dsUser.size() == 0){
+            cmbPublicKey.removeAllItems();
+            for(int  i = 0; i < dsUser.size(); i++){
+                cmbPublicKey.addItem(dsUser.get(i));
+            }
+        }
     }
 
     /**
@@ -115,7 +119,7 @@ public class Home extends javax.swing.JFrame {
         btnCreateNew = new javax.swing.JButton();
 
         FileImportView.setMinimumSize(new java.awt.Dimension(500, 326));
-        FileImportView.getContentPane().setLayout(new java.awt.GridLayout());
+        FileImportView.getContentPane().setLayout(new java.awt.GridLayout(1, 0));
 
         boxFileImport.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -319,14 +323,14 @@ public class Home extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(txtNameUserCreate, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(63, 63, 63))))
-            .addGroup(jPanel2Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 52, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(57, 57, 57))
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
                 .addGap(0, 0, Short.MAX_VALUE)
                 .addComponent(btnEncode)
                 .addGap(186, 186, 186))
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 99, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 0, Short.MAX_VALUE))
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -375,6 +379,11 @@ public class Home extends javax.swing.JFrame {
         });
 
         cmbPublicKey.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        cmbPublicKey.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cmbPublicKeyActionPerformed(evt);
+            }
+        });
 
         jLabel18.setText("Khoá cần kiếm tra");
 
@@ -400,8 +409,8 @@ public class Home extends javax.swing.JFrame {
                         .addGap(32, 32, 32)
                         .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(txtGiaiMaDecode, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(txtBanMaHoaDecode, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                                .addComponent(txtBanMaHoaDecode, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addGroup(jPanel3Layout.createSequentialGroup()
                                     .addComponent(txtSignature, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE)
                                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -549,6 +558,11 @@ public class Home extends javax.swing.JFrame {
 
     private void btnDecodeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDecodeActionPerformed
         
+        
+        int indexUser = cmbPublicKey.getSelectedIndex();
+        System.out.println("index = " + indexUser);
+        System.out.println("e = " + dsE.get(indexUser));
+        System.out.println("n = " + dsN.get(indexUser));
         if(txtBanGocDecode.getText().isEmpty()){
             JOptionPane.showMessageDialog(this, "Vui lòng nhập bản gốc mà người nhận nhận được để kiểm tra!");
         }
@@ -556,6 +570,8 @@ public class Home extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this, "Vui lòng nhập vào khoá để xác thực người gửi!");
         }
         else{
+            
+                
                 String banGoc = txtBanGocDecode.getText();
                 byte[] hashRecived = new byte[DO_NOTHING_ON_CLOSE];
                 try {
@@ -563,6 +579,10 @@ public class Home extends javax.swing.JFrame {
                     System.out.println("Hashed message: " + bytesToHex(hash));
                 } catch (NoSuchAlgorithmException e) {
                     e.printStackTrace();
+                }
+                System.out.println("Hash nguwoif nhan duoc = ");
+                for(int i = 0 ; i < hashRecived.length; i++){
+                    System.out.print(hashRecived[i] + " ");
                 }
                 String input = txtSignature.getText();
                 int[] signature = stringToIntArray(input);
@@ -574,9 +594,10 @@ public class Home extends javax.swing.JFrame {
                     }
                 }
                 int[] decryptedSignature = new int[signature.length];
+                System.out.println("");
                 System.out.println("Hash 2 : Giải mã");
                 for (int i = 0; i < signature.length; i++) {
-                    int decrytedTemp = modPow(signature[i], e, n);
+                    int decrytedTemp = modPow(signature[i], dsE.get(indexUser), dsN.get(indexUser));
                     if(dsIndexAm.contains(i)){
                         decrytedTemp -= n;
                     }
@@ -589,7 +610,6 @@ public class Home extends javax.swing.JFrame {
                 boolean flag = true;
                 if(hashRecived.length != decryptedSignature.length){
                     flag = false;
-                    JOptionPane.showMessageDialog(this, "Chữ Kí Chưa Đúng!");
                 }
                 else{
                     for(int i = 0 ; i < hashRecived.length; i++){
@@ -599,6 +619,7 @@ public class Home extends javax.swing.JFrame {
                         }
                     }
                 }
+                System.out.println("Chu ki = " + input);
                 if(flag){
                     JOptionPane.showMessageDialog(this, "Chữ kí đúng!");
                 }
@@ -666,7 +687,12 @@ public class Home extends javax.swing.JFrame {
 
             String[] stringArray = Arrays.stream(signature).mapToObj(String::valueOf).toArray(String[]::new);
             txtBanMaHoaEncode.setText(String.join(" ", stringArray));
-            txtNameUserCreate.getText();
+            dsUser.add(txtNameUserCreate.getText());
+            cmbPublicKey.addItem(txtNameUserCreate.getText());
+            dsE.add(e);
+            dsN.add(n);
+            
+            
             JOptionPane.showMessageDialog(this, "Tạo chữ kí thành công!");
 
             
@@ -679,16 +705,12 @@ public class Home extends javax.swing.JFrame {
 
     private void btnCreateNewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCreateNewActionPerformed
        txtBanGocDecode.setText("");
-       txtBanGocDecode.setText("");
-       txtBanGocDecode.setText("");
-       txtBanGocDecode.setText("");
-       txtBanGocDecode.setText("");
-       txtBanGocDecode.setText("");
-       txtBanGocDecode.setText("");
-       txtBanGocDecode.setText("");
-       txtBanGocDecode.setText("");
-       txtBanGocDecode.setText("");
-       txtBanGocDecode.setText("");
+       txtBanMaHoaDecode.setText("");
+       txtGiaiMaDecode.setText("");
+       txtBanMaHoaEncode.setText("");
+       txtNameUserCreate.setText("");
+       txtSignature.setText("");
+       txtBanRoEnCode.setText("");
 
         
         
@@ -718,6 +740,10 @@ public class Home extends javax.swing.JFrame {
         System.out.println("File content:\n" + fileContent);
         FileImportRecived.setVisible(false);
     }//GEN-LAST:event_boxFileRecivedActionPerformed
+
+    private void cmbPublicKeyActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbPublicKeyActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_cmbPublicKeyActionPerformed
     private static String readFileToString(File file) {
         StringBuilder content = new StringBuilder();
 
